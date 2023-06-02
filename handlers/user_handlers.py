@@ -4,8 +4,8 @@ from config_data.config import Config, load_config
 from aiogram import Router
 from aiogram.filters import Command, CommandStart, Text
 from aiogram.types import CallbackQuery, Message
-from filters.filters import IsAdmin, AddUserTheory, AddUserPractice, AddUserPolirovka
-from database.database import user_dict_template_theory, user_dict_template_practice, users_db, users_db_pr, users_db_polir
+from filters.filters import IsAdmin, AddUserTheory, AddUserPractice, AddUserPolirovka, AddUserSMM
+from database.database import user_dict_template_theory, user_dict_template_practice, users_db, users_db_pr, users_db_polir, users_db_smm
 from keyboards.pagination_kb import create_pagination_keyboard, create_pagination_keyboard_practice
 from keyboards.other_kb import create_polirovka_kb, create_notion_kb, create_smm_kb, create_yesno_kb, create_presentation_kb, create_memo_kb
 from lexicon.lexicon import LEXICON, LEXICON_LESSONS_NAME, LEXICON_LESSONS_URL, LEXICON_LESSONS_PRACTICE, LEXICON_LESSONS_PRACTICE_URL
@@ -27,7 +27,7 @@ async def process_start_cammand(message: Message):
     else:
         await message.answer(LEXICON['/start'])
         params: dict[str, str] = {
-            'chat_id': '1799099725',
+            'chat_id': f'{config.tg_bot.admin_ids[0]}',
             'text': f'Пользователь {message.from_user.full_name} запрашивает доступ к обучению. '
             f'ID: {message.from_user.id}'}
         response = requests.get(
@@ -55,11 +55,6 @@ async def process_teory_command(message: Message):
             text=text,
             reply_markup=create_pagination_keyboard(pag, url, text_but))
         await message.answer(LEXICON['presentation'], reply_markup=create_yesno_kb())
-        # url_pol = LEXICON_LESSONS_URL['pol']
-        # text_pol = LEXICON['polirovka']
-        # await message.answer(
-        #     text=text_pol,
-        #     reply_markup=create_polirovka_kb(url_pol))
     else:
         await message.answer(LEXICON['close'])
 
@@ -116,7 +111,7 @@ async def process_polirovka_command(message: Message):
 # и отправлять пользователю ссылку на курс по смм
 @router.message(Command(commands='smm'))
 async def process_smm_command(message: Message):
-    if message.from_user.id in users_db:
+    if message.from_user.id in users_db_smm:
         text_notion = LEXICON['notion']
         url_android = LEXICON_LESSONS_URL['android']
         url_ios = LEXICON_LESSONS_URL['ios']
@@ -309,5 +304,19 @@ async def add_user(message: Message):
     params = {
         'chat_id': int((message.text).split('_')[0]),
         'text': f'{LEXICON["open_polir"]}'}
+    response = requests.get(
+        'https://api.telegram.org/bot' + config.tg_bot.token + '/sendMessage', params=params)
+
+
+# этот хэндлер будет срабатывать на отправку id пользователя
+# и открывать ему доступ к полировке
+@router.message(IsAdmin(config.tg_bot.admin_ids), AddUserSMM())
+async def add_user(message: Message):
+    users_db_smm.append(int((message.text).split('_')[0]))
+    print(users_db_smm)
+    await message.answer('Пользователь добавлен')
+    params = {
+        'chat_id': int((message.text).split('_')[0]),
+        'text': f'{LEXICON["open_smm"]}'}
     response = requests.get(
         'https://api.telegram.org/bot' + config.tg_bot.token + '/sendMessage', params=params)

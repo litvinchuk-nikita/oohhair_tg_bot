@@ -31,3 +31,10 @@ class AddUserPolirovka(BaseFilter):
         mess = message.text
         add_id = re.match(r'^\d+_polirovka$', mess)
         return add_id
+
+
+class AddUserSMM(BaseFilter):
+    async def __call__(self, message: Message) -> None | int:
+        mess = message.text
+        add_id = re.match(r'^\d+_smm$', mess)
+        return add_id
