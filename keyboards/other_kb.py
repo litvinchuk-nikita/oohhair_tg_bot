@@ -48,15 +48,36 @@ def create_presentation_kb(url) -> InlineKeyboardMarkup:
 
 def create_memo_kb() -> InlineKeyboardMarkup:
     light_button: InlineKeyboardButton = InlineKeyboardButton(
-        text='Слабый', callback_data='light')
+        text='Легкие', callback_data='light')
+    lightmiddle_button: InlineKeyboardButton = InlineKeyboardButton(
+        text='Легкие - средние', callback_data='lightmiddle')
     middle_button: InlineKeyboardButton = InlineKeyboardButton(
-        text='Средний', callback_data='middle')
+        text='Средние', callback_data='middle')
+    middlestrong_button: InlineKeyboardButton = InlineKeyboardButton(
+        text='Средние - сильные', callback_data='middlestrong')
     strong_button: InlineKeyboardButton = InlineKeyboardButton(
-        text='Сильный', callback_data='strong')
-    blonde_button: InlineKeyboardButton = InlineKeyboardButton(
-        text='Составы для блонда', callback_data='blond')
-    kb_builder_blond: InlineKeyboardBuilder = InlineKeyboardBuilder()
-    kb_builder_blond.add(light_button, middle_button,
-                         strong_button, blonde_button)
-    kb_builder_blond.adjust(3, 1)
-    return kb_builder_blond.as_markup()
+        text='Сильные', callback_data='strong')
+    kb_builder: InlineKeyboardBuilder = InlineKeyboardBuilder()
+    kb_builder.add(light_button, lightmiddle_button, middle_button,
+                         middlestrong_button, strong_button)
+    kb_builder.adjust(1, 1, 1, 1, 1)
+    return kb_builder.as_markup()
+
+
+def create_injury_kb() -> InlineKeyboardMarkup:
+    button_1: InlineKeyboardButton = InlineKeyboardButton(
+        text='1/2 степень тонкие', callback_data='1/2 thin')
+    button_2: InlineKeyboardButton = InlineKeyboardButton(
+        text='1/2 степень средние', callback_data='1/2 middle')
+    button_3: InlineKeyboardButton = InlineKeyboardButton(
+        text='1/2 степень толстые', callback_data='1/2 fat')
+    button_4: InlineKeyboardButton = InlineKeyboardButton(
+        text='3/4 степень тонкие', callback_data='3/4 thin')
+    button_5: InlineKeyboardButton = InlineKeyboardButton(
+        text='3/4 степень средние', callback_data='3/4 middle')
+    button_6: InlineKeyboardButton = InlineKeyboardButton(
+        text='3/4 степень толстые', callback_data='3/4 fat')
+    kb_builder: InlineKeyboardBuilder = InlineKeyboardBuilder()
+    kb_builder.add(button_1, button_2, button_3, button_4, button_5, button_6)
+    kb_builder.adjust(1, 1, 1, 1, 1, 1)
+    return kb_builder.as_markup()

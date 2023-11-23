@@ -5,9 +5,10 @@ from aiogram import Router
 from aiogram.filters import Command, CommandStart, Text
 from aiogram.types import CallbackQuery, Message
 from filters.filters import IsAdmin, AddUserTheory, AddUserPractice, AddUserPolirovka, AddUserSMM
-from database.database import user_dict_template_theory, user_dict_template_practice, users_db, users_db_pr, users_db_polir, users_db_smm
+from database.database import (users_db, user_dict_template_theory, users_db_pr, user_dict_template_practice, insert_theory, select_theory_id,
+                              insert_practice, select_practice_id, insert_polirovka, select_polirovka_id, insert_smm, select_smm_id)
 from keyboards.pagination_kb import create_pagination_keyboard, create_pagination_keyboard_practice
-from keyboards.other_kb import create_polirovka_kb, create_notion_kb, create_smm_kb, create_yesno_kb, create_presentation_kb, create_memo_kb
+from keyboards.other_kb import create_polirovka_kb, create_notion_kb, create_smm_kb, create_yesno_kb, create_presentation_kb, create_memo_kb, create_injury_kb
 from lexicon.lexicon import LEXICON, LEXICON_LESSONS_NAME, LEXICON_LESSONS_URL, LEXICON_LESSONS_PRACTICE, LEXICON_LESSONS_PRACTICE_URL
 
 router: Router = Router()
@@ -22,14 +23,15 @@ config: Config = load_config()
 # и отправлять ему приветственное сообщение
 @router.message(CommandStart())
 async def process_start_cammand(message: Message):
-    if message.from_user.id in users_db:
+    theory_id_list = select_theory_id()
+    if message.from_user.id in theory_id_list:
         await message.answer(LEXICON['open'])
     else:
         await message.answer(LEXICON['/start'])
         params: dict[str, str] = {
             'chat_id': f'{config.tg_bot.admin_ids[0]}',
             'text': f'Пользователь {message.from_user.full_name} запрашивает доступ к обучению. '
-            f'ID: {message.from_user.id}'}
+            f'ID: {message.from_user.id}\ntg: @{message.from_user.username}'}
         response = requests.get(
             'https://api.telegram.org/bot' + config.tg_bot.token + '/sendMessage', params=params)
 
@@ -45,7 +47,10 @@ async def process_help_command(message: Message):
 # и отправлять пользователю первый теоритический урок с кнопками пагинации
 @router.message(Command(commands='theory'))
 async def process_teory_command(message: Message):
-    if message.from_user.id in users_db:
+    theory_id_list = select_theory_id()
+    if message.from_user.id in theory_id_list:
+        if message.from_user.id not in users_db:
+            users_db[message.from_user.id] = deepcopy(user_dict_template_theory)
         text_but = LEXICON_LESSONS_NAME[str(
             users_db[message.from_user.id]['less'])]
         text = LEXICON['/theory']
@@ -65,14 +70,16 @@ async def process_teory_command(message: Message):
 async def process_forward_press(callback: CallbackQuery):
     if users_db[callback.from_user.id]['less'] < 23:
         users_db[callback.from_user.id]['less'] += 1
-        text_but = LEXICON_LESSONS_NAME[str(
-            users_db[callback.from_user.id]['less'])]
-        text = LEXICON['/theory']
-        url = LEXICON_LESSONS_URL[str(users_db[callback.from_user.id]['less'])]
-        pag = f'{users_db[callback.from_user.id]["less"]}/{len(LEXICON_LESSONS_NAME)}'
-        await callback.message.edit_text(
-            text=text,
-            reply_markup=create_pagination_keyboard(pag, url, text_but))
+    elif users_db[callback.from_user.id]['less'] == 23:
+        users_db[callback.from_user.id]['less'] = 1
+    text_but = LEXICON_LESSONS_NAME[str(
+        users_db[callback.from_user.id]['less'])]
+    text = LEXICON['/theory']
+    url = LEXICON_LESSONS_URL[str(users_db[callback.from_user.id]['less'])]
+    pag = f'{users_db[callback.from_user.id]["less"]}/{len(LEXICON_LESSONS_NAME)}'
+    await callback.message.edit_text(
+        text=text,
+        reply_markup=create_pagination_keyboard(pag, url, text_but))
     await callback.answer()
 
 
@@ -82,14 +89,16 @@ async def process_forward_press(callback: CallbackQuery):
 async def process_backward_press(callback: CallbackQuery):
     if users_db[callback.from_user.id]['less'] > 1:
         users_db[callback.from_user.id]['less'] -= 1
-        text_but = LEXICON_LESSONS_NAME[str(
-            users_db[callback.from_user.id]['less'])]
-        text = LEXICON['/theory']
-        url = LEXICON_LESSONS_URL[str(users_db[callback.from_user.id]['less'])]
-        pag = f'{users_db[callback.from_user.id]["less"]}/{len(LEXICON_LESSONS_NAME)}'
-        await callback.message.edit_text(
-            text=text,
-            reply_markup=create_pagination_keyboard(pag, url, text_but))
+    elif users_db[callback.from_user.id]['less'] == 1:
+        users_db[callback.from_user.id]['less'] = 23
+    text_but = LEXICON_LESSONS_NAME[str(
+        users_db[callback.from_user.id]['less'])]
+    text = LEXICON['/theory']
+    url = LEXICON_LESSONS_URL[str(users_db[callback.from_user.id]['less'])]
+    pag = f'{users_db[callback.from_user.id]["less"]}/{len(LEXICON_LESSONS_NAME)}'
+    await callback.message.edit_text(
+        text=text,
+        reply_markup=create_pagination_keyboard(pag, url, text_but))
     await callback.answer()
 
 
@@ -97,7 +106,8 @@ async def process_backward_press(callback: CallbackQuery):
 # и отправлять пользователю урок по полировке волос
 @router.message(Command(commands='polirovka'))
 async def process_polirovka_command(message: Message):
-    if message.from_user.id in users_db_polir:
+    users_id_polir = select_polirovka_id()
+    if message.from_user.id in users_id_polir:
         url_pol = LEXICON_LESSONS_URL['pol']
         text_pol = LEXICON['polirovka']
         await message.answer(
@@ -111,7 +121,8 @@ async def process_polirovka_command(message: Message):
 # и отправлять пользователю ссылку на курс по смм
 @router.message(Command(commands='smm'))
 async def process_smm_command(message: Message):
-    if message.from_user.id in users_db_smm:
+    users_id_smm = select_smm_id()
+    if message.from_user.id in users_id_smm:
         text_notion = LEXICON['notion']
         url_android = LEXICON_LESSONS_URL['android']
         url_ios = LEXICON_LESSONS_URL['ios']
@@ -130,7 +141,10 @@ async def process_smm_command(message: Message):
 # и отправлять пользователю первый практический урок с кнопками пагинации
 @router.message(Command(commands='practice'))
 async def process_practice_command(message: Message):
-    if message.from_user.id in users_db_pr:
+    users_id_pr = select_practice_id()
+    if message.from_user.id in users_id_pr:
+        if message.from_user.id not in users_db_pr:
+            users_db_pr[message.from_user.id] = deepcopy(user_dict_template_practice)
         text_but = LEXICON_LESSONS_PRACTICE[str(
             users_db_pr[message.from_user.id]['practice'])]
         text = LEXICON['/practice']
@@ -151,15 +165,17 @@ async def process_practice_command(message: Message):
 async def process_forward_press(callback: CallbackQuery):
     if users_db_pr[callback.from_user.id]['practice'] < 3:
         users_db_pr[callback.from_user.id]['practice'] += 1
-        text_but = LEXICON_LESSONS_PRACTICE[str(
-            users_db_pr[callback.from_user.id]['practice'])]
-        text = LEXICON['/practice']
-        url = LEXICON_LESSONS_PRACTICE_URL[str(
-            users_db_pr[callback.from_user.id]['practice'])]
-        pag = f'{users_db_pr[callback.from_user.id]["practice"]}/{len(LEXICON_LESSONS_PRACTICE)}'
-        await callback.message.edit_text(
-            text=text,
-            reply_markup=create_pagination_keyboard_practice(pag, url, text_but))
+    elif users_db_pr[callback.from_user.id]['practice'] == 3:
+        users_db_pr[callback.from_user.id]['practice'] = 1
+    text_but = LEXICON_LESSONS_PRACTICE[str(
+        users_db_pr[callback.from_user.id]['practice'])]
+    text = LEXICON['/practice']
+    url = LEXICON_LESSONS_PRACTICE_URL[str(
+        users_db_pr[callback.from_user.id]['practice'])]
+    pag = f'{users_db_pr[callback.from_user.id]["practice"]}/{len(LEXICON_LESSONS_PRACTICE)}'
+    await callback.message.edit_text(
+        text=text,
+        reply_markup=create_pagination_keyboard_practice(pag, url, text_but))
     await callback.answer()
 
 
@@ -169,15 +185,17 @@ async def process_forward_press(callback: CallbackQuery):
 async def process_backward_press(callback: CallbackQuery):
     if users_db_pr[callback.from_user.id]['practice'] > 1:
         users_db_pr[callback.from_user.id]['practice'] -= 1
-        text_but = LEXICON_LESSONS_PRACTICE[str(
-            users_db_pr[callback.from_user.id]['practice'])]
-        text = LEXICON['/practice']
-        url = LEXICON_LESSONS_PRACTICE_URL[str(
-            users_db_pr[callback.from_user.id]['practice'])]
-        pag = f'{users_db_pr[callback.from_user.id]["practice"]}/{len(LEXICON_LESSONS_PRACTICE)}'
-        await callback.message.edit_text(
-            text=text,
-            reply_markup=create_pagination_keyboard_practice(pag, url, text_but))
+    elif users_db_pr[callback.from_user.id]['practice'] == 1:
+        users_db_pr[callback.from_user.id]['practice'] = 3
+    text_but = LEXICON_LESSONS_PRACTICE[str(
+        users_db_pr[callback.from_user.id]['practice'])]
+    text = LEXICON['/practice']
+    url = LEXICON_LESSONS_PRACTICE_URL[str(
+        users_db_pr[callback.from_user.id]['practice'])]
+    pag = f'{users_db_pr[callback.from_user.id]["practice"]}/{len(LEXICON_LESSONS_PRACTICE)}'
+    await callback.message.edit_text(
+        text=text,
+        reply_markup=create_pagination_keyboard_practice(pag, url, text_but))
     await callback.answer()
 
 
@@ -212,16 +230,18 @@ async def process_backward_press(callback: CallbackQuery):
 # и отправлять пользователю памятку по составам
 @router.message(Command(commands='memo'))
 async def process_memo_command(message: Message):
-    if message.from_user.id in users_db:
+    user_id_theory = select_theory_id()
+    if message.from_user.id in user_id_theory:
         text = LEXICON['/memo']
         await message.answer(
             text=text,
+            parse_mode='HTML',
             reply_markup=create_memo_kb())
     else:
         await message.answer(LEXICON['close'])
 
 
-# Этот хэндлер будет срабатывать на нажатие инлайн-кнопки "Сильный"
+# Этот хэндлер будет срабатывать на нажатие инлайн-кнопки "Сильные"
 # во время взаимодействия пользователя с памяткой по составам
 @router.callback_query(Text(text='strong'))
 async def process_strong_press(callback: CallbackQuery):
@@ -232,7 +252,18 @@ async def process_strong_press(callback: CallbackQuery):
     await callback.answer()
 
 
-# Этот хэндлер будет срабатывать на нажатие инлайн-кнопки "Средний"
+# Этот хэндлер будет срабатывать на нажатие инлайн-кнопки "Средние-сильные"
+# во время взаимодействия пользователя с памяткой по составам
+@router.callback_query(Text(text='middlestrong'))
+async def process_strong_press(callback: CallbackQuery):
+    text = LEXICON['middlestrong']
+    await callback.message.edit_text(
+        text=text,
+        reply_markup=create_memo_kb())
+    await callback.answer()
+
+
+# Этот хэндлер будет срабатывать на нажатие инлайн-кнопки "Средние"
 # во время взаимодействия пользователя с памяткой по составам
 @router.callback_query(Text(text='middle'))
 async def process_backward_press(callback: CallbackQuery):
@@ -243,7 +274,18 @@ async def process_backward_press(callback: CallbackQuery):
     await callback.answer()
 
 
-# Этот хэндлер будет срабатывать на нажатие инлайн-кнопки "Легкий"
+# Этот хэндлер будет срабатывать на нажатие инлайн-кнопки "Легкие-средние"
+# во время взаимодействия пользователя с памяткой по составам
+@router.callback_query(Text(text='lightmiddle'))
+async def process_backward_press(callback: CallbackQuery):
+    text = LEXICON['lightmiddle']
+    await callback.message.edit_text(
+        text=text,
+        reply_markup=create_memo_kb())
+    await callback.answer()
+
+
+# Этот хэндлер будет срабатывать на нажатие инлайн-кнопки "Легкие"
 # во время взаимодействия пользователя с памяткой по составам
 @router.callback_query(Text(text='light'))
 async def process_backward_press(callback: CallbackQuery):
@@ -254,14 +296,84 @@ async def process_backward_press(callback: CallbackQuery):
     await callback.answer()
 
 
-# Этот хэндлер будет срабатывать на нажатие инлайн-кнопки "Легкий"
-# во время взаимодействия пользователя с памяткой по составам
-@router.callback_query(Text(text='blond'))
-async def process_backward_press(callback: CallbackQuery):
-    text = LEXICON['blond']
+# этот хэндлер будет срабатывать на команду "/reminder"
+# и отправлять пользователю памятку по составам
+@router.message(Command(commands='reminder'))
+async def process_memo_command(message: Message):
+    user_id_theory = select_theory_id()
+    if message.from_user.id in user_id_theory:
+        text = LEXICON['injury']
+        await message.answer(
+            text=text,
+            parse_mode='HTML',
+            reply_markup=create_injury_kb())
+    else:
+        await message.answer(LEXICON['close'])
+
+
+# Этот хэндлер будет срабатывать на нажатие инлайн-кнопки "1/2 степень тонкие"
+# во время взаимодействия пользователя с памяткой по степени повреждения волоса
+@router.callback_query(Text(text='1/2 thin'))
+async def process_thin_press(callback: CallbackQuery):
+    text = LEXICON['1/2 thin']
     await callback.message.edit_text(
         text=text,
-        reply_markup=create_memo_kb())
+        reply_markup=create_injury_kb())
+    await callback.answer()
+
+
+# Этот хэндлер будет срабатывать на нажатие инлайн-кнопки "1/2 степень средние"
+# во время взаимодействия пользователя с памяткой по степени повреждения волоса
+@router.callback_query(Text(text='1/2 middle'))
+async def process_thin_press(callback: CallbackQuery):
+    text = LEXICON['1/2 middle']
+    await callback.message.edit_text(
+        text=text,
+        reply_markup=create_injury_kb())
+    await callback.answer()
+
+
+# Этот хэндлер будет срабатывать на нажатие инлайн-кнопки "1/2 степень толстые"
+# во время взаимодействия пользователя с памяткой по степени повреждения волоса
+@router.callback_query(Text(text='1/2 fat'))
+async def process_thin_press(callback: CallbackQuery):
+    text = LEXICON['1/2 fat']
+    await callback.message.edit_text(
+        text=text,
+        reply_markup=create_injury_kb())
+    await callback.answer()
+
+
+# Этот хэндлер будет срабатывать на нажатие инлайн-кнопки "3/4 степень тонкие"
+# во время взаимодействия пользователя с памяткой по степени повреждения волоса
+@router.callback_query(Text(text='3/4 thin'))
+async def process_thin_press(callback: CallbackQuery):
+    text = LEXICON['3/4 thin']
+    await callback.message.edit_text(
+        text=text,
+        reply_markup=create_injury_kb())
+    await callback.answer()
+
+
+# Этот хэндлер будет срабатывать на нажатие инлайн-кнопки "3/4 степень средние"
+# во время взаимодействия пользователя с памяткой по степени повреждения волоса
+@router.callback_query(Text(text='3/4 middle'))
+async def process_thin_press(callback: CallbackQuery):
+    text = LEXICON['3/4 middle']
+    await callback.message.edit_text(
+        text=text,
+        reply_markup=create_injury_kb())
+    await callback.answer()
+
+
+# Этот хэндлер будет срабатывать на нажатие инлайн-кнопки "3/4 степень толстые"
+# во время взаимодействия пользователя с памяткой по степени повреждения волоса
+@router.callback_query(Text(text='3/4 fat'))
+async def process_thin_press(callback: CallbackQuery):
+    text = LEXICON['3/4 fat']
+    await callback.message.edit_text(
+        text=text,
+        reply_markup=create_injury_kb())
     await callback.answer()
 
 
@@ -269,8 +381,7 @@ async def process_backward_press(callback: CallbackQuery):
 # и открывать ему доступ к теории
 @router.message(IsAdmin(config.tg_bot.admin_ids), AddUserTheory())
 async def add_user(message: Message):
-    users_db[int(message.text)] = deepcopy(user_dict_template_theory)
-    print(users_db)
+    insert_theory(message.text)
     await message.answer('Пользователь добавлен')
     params = {
         'chat_id': int(message.text),
@@ -283,9 +394,7 @@ async def add_user(message: Message):
 # и открывать ему доступ к практике
 @router.message(IsAdmin(config.tg_bot.admin_ids), AddUserPractice())
 async def add_user(message: Message):
-    users_db_pr[int((message.text).split('_')[0])] = deepcopy(
-        user_dict_template_practice)
-    print(users_db_pr)
+    insert_practice(int((message.text).split('_')[0]))
     await message.answer('Пользователь добавлен')
     params = {
         'chat_id': int((message.text).split('_')[0]),
@@ -298,8 +407,7 @@ async def add_user(message: Message):
 # и открывать ему доступ к полировке
 @router.message(IsAdmin(config.tg_bot.admin_ids), AddUserPolirovka())
 async def add_user(message: Message):
-    users_db_polir.append(int((message.text).split('_')[0]))
-    print(users_db_polir)
+    insert_polirovka(int((message.text).split('_')[0]))
     await message.answer('Пользователь добавлен')
     params = {
         'chat_id': int((message.text).split('_')[0]),
@@ -309,11 +417,10 @@ async def add_user(message: Message):
 
 
 # этот хэндлер будет срабатывать на отправку id пользователя
-# и открывать ему доступ к полировке
+# и открывать ему доступ к smm
 @router.message(IsAdmin(config.tg_bot.admin_ids), AddUserSMM())
 async def add_user(message: Message):
-    users_db_smm.append(int((message.text).split('_')[0]))
-    print(users_db_smm)
+    insert_smm(int((message.text).split('_')[0]))
     await message.answer('Пользователь добавлен')
     params = {
         'chat_id': int((message.text).split('_')[0]),
