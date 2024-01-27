@@ -38,3 +38,10 @@ class AddUserSMM(BaseFilter):
         mess = message.text
         add_id = re.match(r'^\d+_smm$', mess)
         return add_id
+
+
+class AddUserPromotion(BaseFilter):
+    async def __call__(self, message: Message) -> None | int:
+        mess = message.text
+        add_id = re.match(r'^\d+_prom$', mess)
+        return add_id

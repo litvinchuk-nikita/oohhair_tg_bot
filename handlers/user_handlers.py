@@ -4,12 +4,13 @@ from config_data.config import Config, load_config
 from aiogram import Router
 from aiogram.filters import Command, CommandStart, Text
 from aiogram.types import CallbackQuery, Message
-from filters.filters import IsAdmin, AddUserTheory, AddUserPractice, AddUserPolirovka, AddUserSMM
+from filters.filters import IsAdmin, AddUserTheory, AddUserPractice, AddUserPolirovka, AddUserSMM, AddUserPromotion
 from database.database import (users_db, user_dict_template_theory, users_db_pr, user_dict_template_practice, insert_theory, select_theory_id,
-                              insert_practice, select_practice_id, insert_polirovka, select_polirovka_id, insert_smm, select_smm_id)
-from keyboards.pagination_kb import create_pagination_keyboard, create_pagination_keyboard_practice
+                              insert_practice, select_practice_id, insert_polirovka, select_polirovka_id, insert_smm, select_smm_id,
+                              select_promotion_id, insert_promotion, user_dict_template_promotion, users_db_prom)
+from keyboards.pagination_kb import create_pagination_keyboard, create_pagination_keyboard_practice, create_pagination_keyboard_promotion
 from keyboards.other_kb import create_polirovka_kb, create_notion_kb, create_smm_kb, create_yesno_kb, create_presentation_kb, create_memo_kb, create_injury_kb
-from lexicon.lexicon import LEXICON, LEXICON_LESSONS_NAME, LEXICON_LESSONS_URL, LEXICON_LESSONS_PRACTICE, LEXICON_LESSONS_PRACTICE_URL
+from lexicon.lexicon import LEXICON, LEXICON_LESSONS_NAME, LEXICON_LESSONS_URL, LEXICON_LESSONS_PRACTICE, LEXICON_LESSONS_PRACTICE_URL, LEXICON_LESSONS_PROMOTION, LEXICON_LESSONS_PROMOTION_URL
 
 router: Router = Router()
 
@@ -231,7 +232,8 @@ async def process_backward_press(callback: CallbackQuery):
 @router.message(Command(commands='memo'))
 async def process_memo_command(message: Message):
     user_id_theory = select_theory_id()
-    if message.from_user.id in user_id_theory:
+    user_id_prom = select_promotion_id()
+    if message.from_user.id in user_id_theory or message.from_user.id in user_id_prom:
         text = LEXICON['/memo']
         await message.answer(
             text=text,
@@ -301,7 +303,8 @@ async def process_backward_press(callback: CallbackQuery):
 @router.message(Command(commands='reminder'))
 async def process_memo_command(message: Message):
     user_id_theory = select_theory_id()
-    if message.from_user.id in user_id_theory:
+    user_id_prom = select_promotion_id()
+    if message.from_user.id in user_id_theory or message.from_user.id in user_id_prom:
         text = LEXICON['injury']
         await message.answer(
             text=text,
@@ -377,6 +380,68 @@ async def process_thin_press(callback: CallbackQuery):
     await callback.answer()
 
 
+# этот хэндлер будет срабатывать на команду "/promotion"
+# и отправлять пользователю первый урок повышения с кнопками пагинации
+@router.message(Command(commands='promotion'))
+async def process_promotion_command(message: Message):
+    users_id_prom = select_promotion_id()
+    if message.from_user.id in users_id_prom:
+        if message.from_user.id not in users_db_prom:
+            users_db_prom[message.from_user.id] = deepcopy(user_dict_template_promotion)
+        text_but = LEXICON_LESSONS_PROMOTION[str(
+            users_db_prom[message.from_user.id]['promotion'])]
+        text = LEXICON['/promotion']
+        url = LEXICON_LESSONS_PROMOTION_URL[str(
+            users_db_prom[message.from_user.id]['promotion'])]
+        pag = f'{users_db_prom[message.from_user.id]["promotion"]}/{len(LEXICON_LESSONS_PROMOTION)}'
+        await message.answer(
+            text=text,
+            reply_markup=create_pagination_keyboard_promotion(pag, url, text_but))
+        await message.answer(LEXICON['presentation'], reply_markup=create_yesno_kb())
+    else:
+        await message.answer(LEXICON['close'])
+
+
+# Этот хэндлер будет срабатывать на нажатие инлайн-кнопки "вперед"
+# во время взаимодействия пользователя со списком уроков для повышения
+@router.callback_query(Text(text='forward_prom'))
+async def process_forward_press(callback: CallbackQuery):
+    if users_db_prom[callback.from_user.id]['promotion'] < len(LEXICON_LESSONS_PROMOTION):
+        users_db_prom[callback.from_user.id]['promotion'] += 1
+    elif users_db_prom[callback.from_user.id]['promotion'] == len(LEXICON_LESSONS_PROMOTION):
+        users_db_prom[callback.from_user.id]['promotion'] = 1
+    text_but = LEXICON_LESSONS_PROMOTION[str(
+        users_db_prom[callback.from_user.id]['promotion'])]
+    text = LEXICON['/promotion']
+    url = LEXICON_LESSONS_PROMOTION_URL[str(
+        users_db_prom[callback.from_user.id]['promotion'])]
+    pag = f'{users_db_prom[callback.from_user.id]["promotion"]}/{len(LEXICON_LESSONS_PROMOTION)}'
+    await callback.message.edit_text(
+        text=text,
+        reply_markup=create_pagination_keyboard_promotion(pag, url, text_but))
+    await callback.answer()
+
+
+# Этот хэндлер будет срабатывать на нажатие инлайн-кнопки "назад"
+# во время взаимодействия пользователя со списком уроков для повышения
+@router.callback_query(Text(text='backward_prom'))
+async def process_backward_press(callback: CallbackQuery):
+    if users_db_prom[callback.from_user.id]['promotion'] > 1:
+        users_db_prom[callback.from_user.id]['promotion'] -= 1
+    elif users_db_prom[callback.from_user.id]['promotion'] == 1:
+        users_db_prom[callback.from_user.id]['promotion'] = len(LEXICON_LESSONS_PROMOTION)
+    text_but = LEXICON_LESSONS_PROMOTION[str(
+        users_db_prom[callback.from_user.id]['promotion'])]
+    text = LEXICON['/promotion']
+    url = LEXICON_LESSONS_PROMOTION_URL[str(
+        users_db_prom[callback.from_user.id]['promotion'])]
+    pag = f'{users_db_prom[callback.from_user.id]["promotion"]}/{len(LEXICON_LESSONS_PROMOTION)}'
+    await callback.message.edit_text(
+        text=text,
+        reply_markup=create_pagination_keyboard_promotion(pag, url, text_but))
+    await callback.answer()
+
+
 # этот хэндлер будет срабатывать на отправку id пользователя
 # и открывать ему доступ к теории
 @router.message(IsAdmin(config.tg_bot.admin_ids), AddUserTheory())
@@ -425,5 +490,18 @@ async def add_user(message: Message):
     params = {
         'chat_id': int((message.text).split('_')[0]),
         'text': f'{LEXICON["open_smm"]}'}
+    response = requests.get(
+        'https://api.telegram.org/bot' + config.tg_bot.token + '/sendMessage', params=params)
+
+
+# этот хэндлер будет срабатывать на отправку id пользователя
+# и открывать ему доступ к повышению
+@router.message(IsAdmin(config.tg_bot.admin_ids), AddUserPromotion())
+async def add_user(message: Message):
+    insert_promotion(int((message.text).split('_')[0]))
+    await message.answer('Пользователь добавлен')
+    params = {
+        'chat_id': int((message.text).split('_')[0]),
+        'text': f'{LEXICON["open_prom"]}'}
     response = requests.get(
         'https://api.telegram.org/bot' + config.tg_bot.token + '/sendMessage', params=params)
