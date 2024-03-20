@@ -35,6 +35,12 @@ async def process_start_cammand(message: Message):
             f'ID: {message.from_user.id}\ntg: @{message.from_user.username}'}
         response = requests.get(
             'https://api.telegram.org/bot' + config.tg_bot.token + '/sendMessage', params=params)
+        params: dict[str, str] = {
+            'chat_id': f'{config.tg_bot.admin_ids[1]}',
+            'text': f'Пользователь {message.from_user.full_name} запрашивает доступ к обучению. '
+            f'ID: {message.from_user.id}\ntg: @{message.from_user.username}'}
+        response = requests.get(
+            'https://api.telegram.org/bot' + config.tg_bot.token + '/sendMessage', params=params)
 
 
 # этот хэндлер будет срабатывать на команду "/help"
