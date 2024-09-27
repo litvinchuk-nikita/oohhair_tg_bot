@@ -88,18 +88,19 @@ LEXICON_LESSONS_NAME: dict[str, str] = {
     '9': 'Урок №9. Комплекс Клеточных Мембран.',
     '10': 'Урок №10. Фазы роста волос.',
     '11': 'Урок №11. За счет чего выпрямляются волосы.',
-    '12': 'Урок №12. Комплексная реконструкция/холодное восстановление',
-    '13': 'Урок №13. Тех.карта кератин.',
-    '14': 'Урок №14. Тех.карта ботокс волос.',
-    '15': 'Урок №15. Составы, как подобрать нужный.',
-    '16': 'Урок №16. Окрашивание + кератин/ботокс.',
-    '17': 'Урок №17. Как составить прайс.',
-    '18': 'Урок №18. Все о дезинфекции в нашей сфере.',
-    '19': 'Урок №19. Исправление неудачной работы.',
-    '20': 'Урок №20. Протектор.',
-    '21': 'Урок №21. Объясняю почему мои средства могут отличаться от ваших.',
-    '22': 'Урок №22. Консультация,поиск, привлечение и удержание клиента.',
-    '23': 'Урок №23. Пояснение к презентации домашнего ухода'}
+    '12': 'Урок №12. Процедура - Холодное восстановление',
+    '13': 'Урок №13. Холодное восстановление перед кератином/ботоксом (комплексная реконструкция)',
+    '14': 'Урок №14. Тех.карта кератин.',
+    '15': 'Урок №15. Тех.карта ботокс волос.',
+    '16': 'Урок №16. Составы, как подобрать нужный.',
+    '17': 'Урок №17. Окрашивание + кератин/ботокс.',
+    '18': 'Урок №18. Как составить прайс.',
+    '19': 'Урок №19. Все о дезинфекции в нашей сфере.',
+    '20': 'Урок №20. Исправление неудачной работы.',
+    '21': 'Урок №21. Протектор.',
+    '22': 'Урок №22. Объясняю почему мои средства могут отличаться от ваших.',
+    '23': 'Урок №23. Консультация,поиск, привлечение и удержание клиента.',
+    '24': 'Урок №24. Пояснение к презентации домашнего ухода'}
 
 LEXICON_LESSONS_URL: dict[str, str] = {
     '1': 'https://youtu.be/ozxU6x088EY',
@@ -113,18 +114,19 @@ LEXICON_LESSONS_URL: dict[str, str] = {
     '9': 'https://youtu.be/oGCZGCNeUho',
     '10': 'https://youtu.be/sRdCVCzaPmY',
     '11': 'https://youtu.be/yjypCW873Fc',
-    '12': 'https://youtu.be/VSJpt-CAY38',
-    '13': 'https://youtu.be/pt4Q44pxTyM',
-    '14': 'https://youtu.be/4VpbdRonn_I',
-    '15': 'https://youtu.be/EDgWH-7IKFE',
-    '16': 'https://youtu.be/3kuL5ZKYtas',
-    '17': 'https://youtu.be/k918zEWTSeM',
-    '18': 'https://youtu.be/NPnT_2GnL4g',
-    '19': 'https://youtu.be/hdyZV_1WNDg',
-    '20': 'https://youtu.be/4mlRs9JaahI',
-    '21': 'https://youtu.be/sQ9YSRBeugs',
-    '22': 'https://youtu.be/tLhW9yyMT24',
-    '23': 'https://youtu.be/I7qtGD9ygKA',
+    '12': 'https://youtu.be/_73cMH6TF7o?si=VLA4prboCAQRuedt',
+    '13': 'https://youtu.be/p8kCbOMEgR0?si=bBDEm8LWDZgYswhr',
+    '14': 'https://youtu.be/pt4Q44pxTyM',
+    '15': 'https://youtu.be/4VpbdRonn_I',
+    '16': 'https://youtu.be/EDgWH-7IKFE',
+    '17': 'https://youtu.be/3kuL5ZKYtas',
+    '18': 'https://youtu.be/k918zEWTSeM',
+    '19': 'https://youtu.be/NPnT_2GnL4g',
+    '20': 'https://youtu.be/hdyZV_1WNDg',
+    '21': 'https://youtu.be/4mlRs9JaahI',
+    '22': 'https://youtu.be/sQ9YSRBeugs',
+    '23': 'https://youtu.be/tLhW9yyMT24',
+    '24': 'https://youtu.be/I7qtGD9ygKA',
     'pol': 'https://www.youtube.com/watch?v=cV24v196faA',
     'android': 'https://play.google.com/store/apps/details?id=notion.id&hl=ru&gl=US&pli=1',
     'ios': 'https://apps.apple.com/ru/app/notion-notes-docs-tasks/id1232780281',
@@ -133,14 +135,12 @@ LEXICON_LESSONS_URL: dict[str, str] = {
 
 
 LEXICON_LESSONS_PRACTICE: dict[str, str] = {
-    '1': 'Урок №1. Холодное восстановление/Комплексная реконструкция.',
-    '2': 'Урок №2. Kератин.',
-    '3': 'Урок №3. Ботокс.'}
+    '1': 'Урок №1. Kератин.',
+    '2': 'Урок №2. Ботокс.'}
 
 LEXICON_LESSONS_PRACTICE_URL: dict[str, str] = {
-    '1': 'https://youtu.be/KzxsML5xHaE',
-    '2': 'https://youtu.be/qugSdyq2E6A',
-    '3': 'https://youtu.be/SypOipkvAr0'}
+    '1': 'https://youtu.be/qugSdyq2E6A',
+    '2': 'https://youtu.be/SypOipkvAr0'}
 
 LEXICON_LESSONS_PROMOTION: dict[str, str] = {
     '1': 'Урок №1. Нанопластика',
