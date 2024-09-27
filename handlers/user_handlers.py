@@ -75,9 +75,9 @@ async def process_teory_command(message: Message):
 # во время взаимодействия пользователя со списком уроков теории
 @router.callback_query(Text(text='forward'))
 async def process_forward_press(callback: CallbackQuery):
-    if users_db[callback.from_user.id]['less'] < 23:
+    if users_db[callback.from_user.id]['less'] < 24:
         users_db[callback.from_user.id]['less'] += 1
-    elif users_db[callback.from_user.id]['less'] == 23:
+    elif users_db[callback.from_user.id]['less'] == 24:
         users_db[callback.from_user.id]['less'] = 1
     text_but = LEXICON_LESSONS_NAME[str(
         users_db[callback.from_user.id]['less'])]
@@ -97,7 +97,7 @@ async def process_backward_press(callback: CallbackQuery):
     if users_db[callback.from_user.id]['less'] > 1:
         users_db[callback.from_user.id]['less'] -= 1
     elif users_db[callback.from_user.id]['less'] == 1:
-        users_db[callback.from_user.id]['less'] = 23
+        users_db[callback.from_user.id]['less'] = 24
     text_but = LEXICON_LESSONS_NAME[str(
         users_db[callback.from_user.id]['less'])]
     text = LEXICON['/theory']
@@ -170,9 +170,9 @@ async def process_practice_command(message: Message):
 # во время взаимодействия пользователя со списком уроков практики
 @router.callback_query(Text(text='forward_pr'))
 async def process_forward_press(callback: CallbackQuery):
-    if users_db_pr[callback.from_user.id]['practice'] < 3:
+    if users_db_pr[callback.from_user.id]['practice'] < 2:
         users_db_pr[callback.from_user.id]['practice'] += 1
-    elif users_db_pr[callback.from_user.id]['practice'] == 3:
+    elif users_db_pr[callback.from_user.id]['practice'] == 2:
         users_db_pr[callback.from_user.id]['practice'] = 1
     text_but = LEXICON_LESSONS_PRACTICE[str(
         users_db_pr[callback.from_user.id]['practice'])]
@@ -193,7 +193,7 @@ async def process_backward_press(callback: CallbackQuery):
     if users_db_pr[callback.from_user.id]['practice'] > 1:
         users_db_pr[callback.from_user.id]['practice'] -= 1
     elif users_db_pr[callback.from_user.id]['practice'] == 1:
-        users_db_pr[callback.from_user.id]['practice'] = 3
+        users_db_pr[callback.from_user.id]['practice'] = 2
     text_but = LEXICON_LESSONS_PRACTICE[str(
         users_db_pr[callback.from_user.id]['practice'])]
     text = LEXICON['/practice']
